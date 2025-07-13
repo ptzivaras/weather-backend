@@ -1,5 +1,8 @@
 const express = require('express');
 const app = express();
+const pool = require('./config/db');
+const authRoutes = require('./routes/auth'); 
+
 const PORT = process.env.PORT || 3000;
 
 //handle POST/PUT requests with JSON.
@@ -20,6 +23,9 @@ app.get('/api/db-test', async (req, res) => {
     res.status(500).json({ connected: false, error: err.message });
   }
 });
+
+// 👇 Register auth routes
+app.use('/api/auth', authRoutes);
 
 // Start server
 app.listen(PORT, () => {
