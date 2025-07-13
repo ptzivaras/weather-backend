@@ -2,9 +2,9 @@
   "dev": {
     "driver": "pg",
     "host": "localhost",
-    "port": 5432,
-    "user": "postgres",
-    "password": "your_password",
-    "database": "weatherdb"
+    "port": 6666,
+    "user": "postgres_user",
+    "password": "my_password",
+    "database": "my_db"
   }
 }
