@@ -31,3 +31,11 @@ app.use('/api/auth', authRoutes);
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+const authenticateToken = require('./middleware/auth');
+app.get('/api/protected', authenticateToken, (req, res) => {
+  res.json({
+    message: 'Protected content',
+    user: req.user
+  });
+});
