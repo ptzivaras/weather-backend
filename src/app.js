@@ -39,3 +39,7 @@ app.get('/api/protected', authenticateToken, (req, res) => {
     user: req.user
   });
 });
+
+const weatherRoutes = require('./routes/weather');
+app.use('/api/weather', weatherRoutes);
+
