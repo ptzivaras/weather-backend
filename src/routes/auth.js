@@ -2,8 +2,11 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
-router.post('/register', async (req, res) => {
+// POST /api/auth/register (already exists)
+
+router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   // Basic validation
@@ -12,25 +15,30 @@ router.post('/register', async (req, res) => {
   }
 
   try {
-    // Check if email already exists
-    const existing = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
-    if (existing.rows.length > 0) {
-      return res.status(409).json({ error: 'Email already in use.' });
+    // Check if user exists
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    const user = result.rows[0];
+
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Compare password
+    const isMatch = await bcrypt.compare(password, user.password_hash);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Invalid email or password.' });
+    }
 
-    // Insert into DB
-    const result = await pool.query(
-      'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email, created_at',
-      [email, hashedPassword]
+    // Generate JWT
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      process.env.JWT_SECRET || 'dev_jwt_secret',
+      { expiresIn: '1h' }
     );
 
-    const newUser = result.rows[0];
-    res.status(201).json({ user: newUser });
+    res.json({ token });
   } catch (err) {
-    console.error('Registration error:', err.message);
+    console.error('Login error:', err.message);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
