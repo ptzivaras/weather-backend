@@ -43,3 +43,7 @@ app.get('/api/protected', authenticateToken, (req, res) => {
 const weatherRoutes = require('./routes/weather');
 app.use('/api/weather', weatherRoutes);
 
+const locationRoutes = require('./routes/locations');
+app.use('/api/locations', locationRoutes);
+
+

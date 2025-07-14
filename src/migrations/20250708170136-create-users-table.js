@@ -1,20 +1,14 @@
 exports.up = function (db) {
-  return db.createTable('users', {
-    id: {
+  return db.createTable('locations', {
+    id: { type: 'int', primaryKey: true, autoIncrement: true },
+    user_id: {
       type: 'int',
-      primaryKey: true,
-      autoIncrement: true
+      notNull: true
     },
-    email: {
+    city: {
       type: 'string',
       notNull: true,
-      unique: true,
       length: 100
-    },
-    password_hash: {
-      type: 'string',
-      notNull: true,
-      length: 255
     },
     created_at: {
       type: 'timestamp',
@@ -25,5 +19,5 @@ exports.up = function (db) {
 };
 
 exports.down = function (db) {
-  return db.dropTable('users');
+  return db.dropTable('locations');
 };
