@@ -88,4 +88,35 @@ router.delete('/:id', authenticateToken, async (req, res) => {
   }
 });
 
+const { fetchWeatherByCity } = require('../services/weather');
+
+// GET /api/locations/:id/weather
+router.get('/:id/weather', authenticateToken, async (req, res) => {
+  const locationId = parseInt(req.params.id);
+
+  try {
+    // Make sure this location belongs to the current user
+    const result = await pool.query(
+      'SELECT * FROM locations WHERE id = $1 AND user_id = $2',
+      [locationId, req.user.userId]
+    );
+
+    const location = result.rows[0];
+    if (!location) {
+      return res.status(404).json({ error: 'Location not found or unauthorized' });
+    }
+
+    // Fetch weather for that location’s city
+    const weather = await fetchWeatherByCity(location.city);
+    res.json({
+      city: location.city,
+      weather
+    });
+  } catch (err) {
+    console.error('Weather for saved location error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch weather for this location' });
+  }
+});
+
+
 module.exports = router;
