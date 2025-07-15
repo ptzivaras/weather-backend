@@ -2,23 +2,33 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
 const authenticateToken = require('../middleware/auth');
+const { body, validationResult } = require('express-validator');
 
 // Create new location
-router.post('/', authenticateToken, async (req, res) => {
-  const { city } = req.body;
-  if (!city) return res.status(400).json({ error: 'City is required.' });
+router.post(
+  '/',
+  authenticateToken,
+  body('city').notEmpty().withMessage('City is required'),
+  async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
 
-  try {
-    const result = await pool.query(
-      'INSERT INTO locations (user_id, city) VALUES ($1, $2) RETURNING *',
-      [req.user.userId, city]
-    );
-    res.status(201).json(result.rows[0]);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ error: 'Failed to create location' });
+    const { city } = req.body;
+
+    try {
+      const result = await pool.query(
+        'INSERT INTO locations (user_id, city) VALUES ($1, $2) RETURNING *',
+        [req.user.userId, city]
+      );
+      res.status(201).json(result.rows[0]);
+    } catch (err) {
+      next(err);
+    }
   }
-});
+);
+
 
 // Get all user's locations
 router.get('/', authenticateToken, async (req, res) => {
@@ -52,23 +62,36 @@ router.get('/:id', authenticateToken, async (req, res) => {
 });
 
 // Update location
-router.put('/:id', authenticateToken, async (req, res) => {
-  const id = parseInt(req.params.id);
-  const { city } = req.body;
+router.put(
+  '/:id',
+  authenticateToken,
+  body('city').notEmpty().withMessage('City is required'),
+  async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
 
-  try {
-    const result = await pool.query(
-      'UPDATE locations SET city = $1 WHERE id = $2 AND user_id = $3 RETURNING *',
-      [city, id, req.user.userId]
-    );
-    if (result.rows.length === 0)
-      return res.status(404).json({ error: 'Location not found or unauthorized' });
+    const { city } = req.body;
+    const id = parseInt(req.params.id);
 
-    res.json(result.rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to update location' });
+    try {
+      const result = await pool.query(
+        'UPDATE locations SET city = $1 WHERE id = $2 AND user_id = $3 RETURNING *',
+        [city, id, req.user.userId]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Location not found or unauthorized' });
+      }
+
+      res.json(result.rows[0]);
+    } catch (err) {
+      next(err);
+    }
   }
-});
+);
+
 
 // Delete location
 router.delete('/:id', authenticateToken, async (req, res) => {
