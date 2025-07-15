@@ -46,4 +46,10 @@ app.use('/api/weather', weatherRoutes);
 const locationRoutes = require('./routes/locations');
 app.use('/api/locations', locationRoutes);
 
+const errorHandler = require('./middleware/errorHandler');
+
+// Register error handler as the last middleware
+app.use(errorHandler);
+
+
 
